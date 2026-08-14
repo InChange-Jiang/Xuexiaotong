@@ -1,0 +1,25 @@
+# Gradle
+.gradle/
+build/
+app/build/
+.kotlin/
+local.properties
+captures/
+.externalNativeBuild/
+.cxx/
+
+# IDE
+.idea/
+*.iml
+.vscode/
+.DS_Store
+
+# 打包产物
+*.apk
+*.aab
+*.keystore
+*.jks
+output.json
+
+# 日志
+*.log
