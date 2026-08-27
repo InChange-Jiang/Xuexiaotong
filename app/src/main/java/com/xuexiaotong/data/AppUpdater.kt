@@ -27,7 +27,6 @@ class AppUpdater(private val context: Context) {
         private const val GH_OWNER = "InChange-Jiang"
         private const val GH_REPO = "Xuexiaotong"
         private const val API_URL = "https://api.github.com/repos/$GH_OWNER/$GH_REPO/releases/latest"
-        private const val DOWNLOAD_URL = "https://github.com/$GH_OWNER/$GH_REPO/releases/download"
         // 缓存目录下的 APK 命名
         private const val APK_FILENAME = "update.apk"
     }
@@ -66,13 +65,16 @@ class AppUpdater(private val context: Context) {
         val latestVer = tagName.removePrefix("v")
         val localVer = BuildConfig.VERSION_NAME
 
-        val assetUrl = json.optJSONArray("assets")?.optJSONObject(0)?.optString("browser_download_url", "")
-            ?: "$DOWNLOAD_URL/$tagName/$GH_REPO-${latestVer}-release.apk"
+        // 从 release assets 中取第一个 APK 的下载链接
+        val assets = json.optJSONArray("assets")
+        val assetUrl = if (assets != null && assets.length() > 0) {
+            assets.optJSONObject(0)?.optString("browser_download_url", "")
+        } else ""
 
         UpdateInfo(
             hasUpdate = latestVer != localVer,
             latestVersion = latestVer,
-            downloadUrl = assetUrl,
+            downloadUrl = assetUrl ?: "",
             releaseNotes = releaseNotes
         )
     }
