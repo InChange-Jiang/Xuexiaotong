@@ -109,7 +109,7 @@ fun LoginScreen(
             Text("登录学小通", fontSize = 26.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground)
             Spacer(Modifier.height(4.dp))
             Text(
-                "记得写作业啊喂o(≧口≦)o",
+                "使用学习通账号密码登录\n登录凭证仅用于登录学习通，不会上传到任何第三方",
                 fontSize = 13.sp,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
