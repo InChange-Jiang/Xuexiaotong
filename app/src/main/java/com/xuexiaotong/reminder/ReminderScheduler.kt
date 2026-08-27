@@ -72,7 +72,7 @@ object ReminderScheduler {
         works.forEach { w ->
             val endTs = w.endTs ?: return@forEach
             if (endTs <= now) return@forEach
-            if (w.isDone && !setting.onlyTodo) return@forEach
+            if (w.isDone && setting.onlyTodo) return@forEach
 
             val remindAt = endTs - setting.leadMinutes * 60000L
             if (remindAt <= now) return@forEach

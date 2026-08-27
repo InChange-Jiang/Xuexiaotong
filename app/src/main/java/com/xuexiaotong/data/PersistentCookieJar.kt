@@ -28,13 +28,14 @@ class PersistentCookieJar(private val context: Context) : CookieJar {
     }
 
     override fun loadForRequest(url: HttpUrl): List<Cookie> {
-        // 学习通 cookie 跨域共享（Domain=.chaoxing.com），与 uni-app 版行为一致：
-        // 把全部有效 cookie 按 name 去重后发给所有请求，避免按 host 精确匹配导致跨域 cookie 丢失
+        // 只返回匹配当前请求域名/路径/安全协议的有效 Cookie，防止跨域泄漏
         val now = System.currentTimeMillis()
         val map = linkedMapOf<String, Cookie>()
         cache.forEach { (_, list) ->
-            list.filter { it.expiresAt > now }.forEach { c ->
-                map[c.name] = c
+            list.filter { it.expiresAt > now && it.matches(url) }.forEach { c ->
+                // 按 name+domain+path 去重，避免不同子域的同名 Cookie 互相覆盖
+                val key = "${c.name}:${c.domain}:${c.path}"
+                if (key !in map) map[key] = c
             }
         }
         return map.values.toList()

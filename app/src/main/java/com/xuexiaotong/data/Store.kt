@@ -194,5 +194,9 @@ object Store {
         remove("cx_works")
         remove("cx_last_sync")
         remove("cx_reminded")
+        remove("cx_course_progress")
+        remove("cx_done_gray")
+        remove("cx_show_empty_courses")
+        remove("cx_remind_setting")
     }
 }

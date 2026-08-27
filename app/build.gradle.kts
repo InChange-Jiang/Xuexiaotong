@@ -13,16 +13,16 @@ android {
         applicationId = "com.xuexiaotong"
         minSdk = 26
         targetSdk = 37
-        versionCode = 410
-        versionName = "4.1.0"
+        versionCode = 411
+        versionName = "4.1.1"
     }
 
     buildTypes {
         release {
             isMinifyEnabled = false
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-            // 自用分发：暂用调试签名，保证 APK 可直接安装
-            signingConfig = signingConfigs.getByName("debug")
+            // 使用标准签名流程，不指定 signingConfig 以兼容 CI 构建与正式发布
+            // 自用分发时 Android Studio 直接 Run 自动使用 debug 签名
         }
     }
 

@@ -1,11 +1,16 @@
 package com.xuexiaotong.ui.home
 
+import android.Manifest
 import android.app.AlarmManager
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.provider.Settings
 import androidx.activity.compose.BackHandler
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
@@ -1874,6 +1879,18 @@ private fun GlassRemindDialog(
     val leadOptions = listOf(0 to "截止时", 60 to "提前1小时", 360 to "提前6小时", 720 to "提前12小时", 1440 to "提前1天")
     val context = LocalContext.current
 
+    // 通知权限申请（Android 13+：开启提醒前必须获得 POST_NOTIFICATIONS 权限）
+    var pendingSave by remember { mutableStateOf(false) }
+    val notificationPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        if (granted && pendingSave) {
+            onSave(RemindSetting(enabled, lead, onlyTodo))
+            onDismiss()
+        }
+        pendingSave = false
+    }
+
     GlassDialog(
         backdrop = backdrop,
         onDismiss = onDismiss,
@@ -1881,8 +1898,21 @@ private fun GlassRemindDialog(
         confirmText = "保存",
         middleText = "测试通知",
         onConfirm = {
-            onSave(RemindSetting(enabled, lead, onlyTodo))
-            onDismiss()
+            if (enabled && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                if (ContextCompat.checkSelfPermission(
+                        context, Manifest.permission.POST_NOTIFICATIONS
+                    ) == PackageManager.PERMISSION_GRANTED
+                ) {
+                    onSave(RemindSetting(enabled, lead, onlyTodo))
+                    onDismiss()
+                } else {
+                    pendingSave = true
+                    notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                }
+            } else {
+                onSave(RemindSetting(enabled, lead, onlyTodo))
+                onDismiss()
+            }
         },
         onMiddle = onTest
     ) {

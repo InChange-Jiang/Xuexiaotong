@@ -90,9 +90,12 @@ class AppViewModel(val api: ChaoxingApi, private val appContext: Context) : View
     }
 
     fun logout() {
+        // 退出登录前取消所有提醒，避免旧闹钟残留
+        ReminderScheduler.cancelAll(appContext)
+        Store.saveRemindedMap(emptyMap())
         api.clearSession()
         Store.clearLoginData()
-        Store.clearCredential()   // 手动退出时一并清除加密保存的账号密码
+        Store.clearCredential()
         _loggedIn.value = false
         _works.value = emptyList()
         _courses.value = emptyList()
@@ -179,10 +182,13 @@ class AppViewModel(val api: ChaoxingApi, private val appContext: Context) : View
     }
 
     fun saveCustomEvents(list: List<CustomEvent>) {
+        // 先取消所有提醒，此时 Store 中还是旧列表，能取消已删除事件的闹钟
+        ReminderScheduler.cancelAll(appContext)
         Store.saveCustomEvents(list)
         _customEvents.value = list
-        // 增删改日程：整体重调度，避免旧闹钟残留
-        ReminderScheduler.rescheduleAll(appContext)
+        // 清空 reminded map + 重新调度
+        Store.saveRemindedMap(emptyMap())
+        ReminderScheduler.scheduleAll(appContext)
     }
 
     /** 添加自定义日程 */
@@ -243,10 +249,11 @@ class AppViewModel(val api: ChaoxingApi, private val appContext: Context) : View
     }
 
     fun clearCustomEvents() {
+        // 先取消所有提醒，此时 Store 中还是旧列表，能取消所有已有事件的闹钟
+        ReminderScheduler.cancelAll(appContext)
         Store.saveCustomEvents(emptyList())
         _customEvents.value = emptyList()
-        // 清空日程：取消相关闹钟并重调度（rescheduleAll 会取消所有候选闹钟再按新数据调度）
-        ReminderScheduler.rescheduleAll(appContext)
+        Store.saveRemindedMap(emptyMap())
     }
 
     class Factory(private val api: ChaoxingApi, private val appContext: Context) : ViewModelProvider.Factory {

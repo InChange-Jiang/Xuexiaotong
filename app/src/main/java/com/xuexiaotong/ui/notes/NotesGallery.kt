@@ -7,7 +7,9 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -156,7 +158,15 @@ fun NotesGalleryScreen(
     val topPlaceholder = with(density) { (statusBarPx + 76.dp.toPx()).toDp() }
 
     // 独立页面：与主页同源的超浅主题色背景，仅复用标题栏样式
-    Box(Modifier.fillMaxSize()) {
+    Box(
+        Modifier
+            .fillMaxSize()
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null,
+                onClick = {}
+            )
+    ) {
         // 玻璃录制层：背景 + 滚动内容（悬浮标题栏/底部条/弹窗折射本页内容，不穿帮主页）
         Box(
             Modifier
