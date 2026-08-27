@@ -65,16 +65,25 @@ class AppUpdater(private val context: Context) {
         val latestVer = tagName.removePrefix("v")
         val localVer = BuildConfig.VERSION_NAME
 
-        // 从 release assets 中取第一个 APK 的下载链接
+        // 从 release assets 中找到第一个 .apk 文件
         val assets = json.optJSONArray("assets")
         val assetUrl = if (assets != null && assets.length() > 0) {
-            assets.optJSONObject(0)?.optString("browser_download_url", "")
+            var url = ""
+            for (i in 0 until assets.length()) {
+                val a = assets.optJSONObject(i)
+                val name = a?.optString("name", "") ?: ""
+                if (name.endsWith(".apk")) {
+                    url = a.optString("browser_download_url", "")
+                    break
+                }
+            }
+            url
         } else ""
 
         UpdateInfo(
             hasUpdate = compareVersions(latestVer, localVer) > 0,
             latestVersion = latestVer,
-            downloadUrl = assetUrl ?: "",
+            downloadUrl = assetUrl,
             releaseNotes = releaseNotes
         )
     }
