@@ -72,11 +72,24 @@ class AppUpdater(private val context: Context) {
         } else ""
 
         UpdateInfo(
-            hasUpdate = latestVer != localVer,
+            hasUpdate = compareVersions(latestVer, localVer) > 0,
             latestVersion = latestVer,
             downloadUrl = assetUrl ?: "",
             releaseNotes = releaseNotes
         )
+    }
+
+    /** 对比版本号：返回正数表示 v1 > v2，负数表示 v1 < v2，0 表示相等 */
+    private fun compareVersions(v1: String, v2: String): Int {
+        val parts1 = v1.split(".")
+        val parts2 = v2.split(".")
+        val maxLen = maxOf(parts1.size, parts2.size)
+        for (i in 0 until maxLen) {
+            val n1 = parts1.getOrElse(i) { "0" }.toIntOrNull() ?: 0
+            val n2 = parts2.getOrElse(i) { "0" }.toIntOrNull() ?: 0
+            if (n1 != n2) return n1 - n2
+        }
+        return 0
     }
 
     /**
