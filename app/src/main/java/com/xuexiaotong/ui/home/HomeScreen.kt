@@ -776,11 +776,9 @@ fun HomeScreen(
                     backdrop = glassBackdrop,
                     onDismiss = { viewModel.dismissUpdate() },
                     title = "发现新版本",
-                    confirmText = if (downloading) "下载中..." else "立即更新",
+                    confirmText = "在浏览器中下载",
                     dismissText = "稍后更新",
-                    onConfirm = {
-                        if (!downloading) viewModel.startUpdate()
-                    }
+                    onConfirm = { viewModel.startUpdate() }
                 ) {
                     Column(Modifier.fillMaxWidth()) {
                         Text(
@@ -1320,7 +1318,7 @@ private fun SideMenu(
                 Spacer(Modifier.width(12.dp))
                 Column {
                     Text("学小通", fontSize = 17.sp, fontWeight = FontWeight.Bold)
-                    Text("作业日历 · 学习通", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text("©InChange@AHU", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
 

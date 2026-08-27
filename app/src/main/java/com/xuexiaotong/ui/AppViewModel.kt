@@ -65,6 +65,20 @@ class AppViewModel(val api: ChaoxingApi, private val appContext: Context) : View
     private val _downloading = MutableStateFlow(false)
     val downloading: StateFlow<Boolean> = _downloading.asStateFlow()
 
+    /** 跳转浏览器下载 */
+    fun startUpdate() {
+        val info = _updateInfo.value ?: return
+        if (info.downloadUrl.isBlank()) {
+            showMsg("下载链接无效")
+            return
+        }
+        if (updater.openInBrowser(info.downloadUrl)) {
+            dismissUpdate()
+        } else {
+            showMsg("无法打开浏览器，请手动访问 GitHub Releases 下载")
+        }
+    }
+
     /** 关闭更新弹窗，清除更新信息 */
     fun dismissUpdate() {
         _updateInfo.value = null
@@ -93,34 +107,6 @@ class AppViewModel(val api: ChaoxingApi, private val appContext: Context) : View
                 if (!silent) showMsg(e.message ?: "检查更新失败，请稍后重试")
             } finally {
                 _checkingUpdate.value = false
-            }
-        }
-    }
-
-    /** 开始下载最新 APK，下载完成后引导安装 */
-    fun startUpdate() {
-        val info = _updateInfo.value ?: return
-        if (info.downloadUrl.isBlank()) {
-            showMsg("下载链接无效")
-            return
-        }
-        if (_downloading.value) return
-        viewModelScope.launch {
-            _downloading.value = true
-            showMsg("正在下载更新...")
-            try {
-                val file = withContext(Dispatchers.IO) {
-                    updater.downloadApk(info.downloadUrl)
-                }
-                _downloading.value = false
-                if (updater.installApk(file)) {
-                    showMsg("正在安装...")
-                } else {
-                    showMsg("安装失败，请手动安装 APK")
-                }
-            } catch (e: Exception) {
-                _downloading.value = false
-                showMsg(e.message ?: "下载失败，请稍后重试")
             }
         }
     }
