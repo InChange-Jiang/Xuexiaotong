@@ -111,7 +111,8 @@ fun LoginScreen(
             Text(
                 "使用学习通账号密码登录\n登录凭证仅用于登录学习通，不会上传到任何第三方",
                 fontSize = 13.sp,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center
             )
             Spacer(Modifier.height(32.dp))
 

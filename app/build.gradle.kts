@@ -13,8 +13,8 @@ android {
         applicationId = "com.xuexiaotong"
         minSdk = 26
         targetSdk = 37
-        versionCode = 416
-        versionName = "4.1.6"
+        versionCode = 417
+        versionName = "4.1.7"
     }
 
     buildTypes {
