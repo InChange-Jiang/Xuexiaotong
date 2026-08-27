@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.xuexiaotong.data.AppUpdater
 import com.xuexiaotong.data.ChaoxingApi
 import com.xuexiaotong.data.Course
 import com.xuexiaotong.data.CourseProgress
@@ -52,6 +53,77 @@ class AppViewModel(val api: ChaoxingApi, private val appContext: Context) : View
     // 最近一次成功同步时间（毫秒，0 = 从未同步）
     private val _lastSync = MutableStateFlow(Store.getLastSync())
     val lastSync: StateFlow<Long> = _lastSync.asStateFlow()
+
+    // 自动更新状态
+    private val updater = AppUpdater(appContext)
+    private val _checkingUpdate = MutableStateFlow(false)
+    val checkingUpdate: StateFlow<Boolean> = _checkingUpdate.asStateFlow()
+
+    private val _updateInfo = MutableStateFlow<AppUpdater.UpdateInfo?>(null)
+    val updateInfo: StateFlow<AppUpdater.UpdateInfo?> = _updateInfo.asStateFlow()
+
+    private val _downloading = MutableStateFlow(false)
+    val downloading: StateFlow<Boolean> = _downloading.asStateFlow()
+
+    /** 关闭更新弹窗，清除更新信息 */
+    fun dismissUpdate() {
+        _updateInfo.value = null
+    }
+
+    /** 检查更新：比对 GitHub 最新 release 版本号。
+     * @param silent true=静默检查（仅更新 _updateInfo，不弹 snackbar），用于启动时自动检查
+     *                false=显示 snackbar 结果反馈，用于手动菜单点击
+     */
+    fun checkForUpdate(silent: Boolean = false) {
+        if (_checkingUpdate.value || _downloading.value) return
+        viewModelScope.launch {
+            _checkingUpdate.value = true
+            _updateInfo.value = null
+            try {
+                val info = withContext(Dispatchers.IO) { updater.checkVersion() }
+                _updateInfo.value = info
+                if (!silent) {
+                    if (info.hasUpdate) {
+                        showMsg("发现新版本 v${info.latestVersion}")
+                    } else {
+                        showMsg("当前已是最新版本 (v${info.latestVersion})")
+                    }
+                }
+            } catch (e: Exception) {
+                if (!silent) showMsg(e.message ?: "检查更新失败，请稍后重试")
+            } finally {
+                _checkingUpdate.value = false
+            }
+        }
+    }
+
+    /** 开始下载最新 APK，下载完成后引导安装 */
+    fun startUpdate() {
+        val info = _updateInfo.value ?: return
+        if (info.downloadUrl.isBlank()) {
+            showMsg("下载链接无效")
+            return
+        }
+        if (_downloading.value) return
+        viewModelScope.launch {
+            _downloading.value = true
+            showMsg("正在下载更新...")
+            try {
+                val file = withContext(Dispatchers.IO) {
+                    updater.downloadApk(info.downloadUrl)
+                }
+                _downloading.value = false
+                if (updater.installApk(file)) {
+                    showMsg("正在安装...")
+                } else {
+                    showMsg("安装失败，请手动安装 APK")
+                }
+            } catch (e: Exception) {
+                _downloading.value = false
+                showMsg(e.message ?: "下载失败，请稍后重试")
+            }
+        }
+    }
 
     private val _dark = MutableStateFlow(Store.getDarkMode())
     val dark: StateFlow<Boolean> = _dark.asStateFlow()

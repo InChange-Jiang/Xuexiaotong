@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- FileProvider 暴露路径：应用私有目录 notes/ 下的笔记图片 -->
+<!-- FileProvider 暴露路径：应用私有目录 notes/ 下的笔记图片；updates/ 下的更新 APK -->
 <paths>
     <files-path name="notes" path="notes/" />
+    <cache-path name="updates" path="updates/" />
 </paths>

@@ -169,6 +169,9 @@ fun HomeScreen(
     val glassEnabled by viewModel.glassEnabled.collectAsState()
     val darkState by viewModel.dark.collectAsState()
     val themeId by viewModel.themeId.collectAsState()
+    val checkingUpdate by viewModel.checkingUpdate.collectAsState()
+    val updateInfo by viewModel.updateInfo.collectAsState()
+    val downloading by viewModel.downloading.collectAsState()
 
     var tab by remember { mutableStateOf(Tab.SCHEDULE) }
     var showMenu by remember { mutableStateOf(false) }
@@ -200,6 +203,11 @@ fun HomeScreen(
             kotlinx.coroutines.delay(1800)
             toastMsg = null
         }
+    }
+
+    // 启动时静默检查更新（有更新自动弹窗，无更新不打扰）
+    LaunchedEffect(Unit) {
+        viewModel.checkForUpdate(silent = true)
     }
 
     // 日历状态
@@ -368,6 +376,7 @@ fun HomeScreen(
                     onDonate = { showMenu = false; showDonateDialog = true },
                     onFeedback = { showMenu = false; showFeedbackDialog = true },
                     onAbout = { showMenu = false; showAboutDialog = true },
+                    onCheckUpdate = { showMenu = false; viewModel.checkForUpdate() },
                     onClearEvents = { showMenu = false; showClearEventsConfirm = true },
                     onLogout = { showMenu = false; showLogoutConfirm = true },
                     onDismiss = { showMenu = false },
@@ -757,6 +766,40 @@ fun HomeScreen(
         exit = fadeOut(tween(240))
     ) {
         lastToastMsg?.let { GlassToast(it, glassBackdrop) }
+    }
+
+    // 更新弹窗：有更新时显示版本说明、下载按钮
+    updateInfo?.let { info ->
+        if (info.hasUpdate) {
+            GlassPopup(true) {
+                GlassDialog(
+                    backdrop = glassBackdrop,
+                    onDismiss = { viewModel.dismissUpdate() },
+                    title = "发现新版本",
+                    confirmText = if (downloading) "下载中..." else "立即更新",
+                    dismissText = "稍后更新",
+                    onConfirm = {
+                        if (!downloading) viewModel.startUpdate()
+                    }
+                ) {
+                    Column(Modifier.fillMaxWidth()) {
+                        Text(
+                            text = "当前版本：v${BuildConfig.VERSION_NAME}\n" +
+                                "最新版本：v${info.latestVersion}",
+                            fontSize = 14.sp,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Spacer(Modifier.height(8.dp))
+                        Text(
+                            text = "更新内容：\n${info.releaseNotes}",
+                            fontSize = 13.sp,
+                            lineHeight = 16.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -1230,6 +1273,7 @@ private fun SideMenu(
     onDonate: () -> Unit,
     onFeedback: () -> Unit,
     onAbout: () -> Unit,
+    onCheckUpdate: () -> Unit,
     onClearEvents: () -> Unit,
     onLogout: () -> Unit,
     onDismiss: () -> Unit,
@@ -1300,6 +1344,7 @@ private fun SideMenu(
                 MenuArrowItem("支持捐赠", "💝", "", onDonate)
                 MenuArrowItem("问题反馈", "💬", "", onFeedback)
                 MenuArrowItem("软件详情", "ℹ️", "", onAbout)
+                MenuArrowItem("检查更新", "🔄", "", onCheckUpdate)
             }
 
             HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f))
